@@ -4,8 +4,10 @@ lines = []
 def parse(line):
     global lines
     # checking if it is interrogation
-    if '?' in line:
+    if line[0] == '?':
         print('interrogation')
+    elif line[0] == ':':
+        print('response to interrogation')
     else:
         print('affirmation')
         tokens = line.split('(')
@@ -15,7 +17,8 @@ def parse(line):
             terms_tokens = str(tokens[1]).strip(')\n').split(',')
             # print(list(map(lambda x: int(x), terms_tokens)))
         else:
-            pass
+            line_tokens = str(tokens[1]).strip(')\n').split(':')
+            print(line_tokens)
 
 
 
