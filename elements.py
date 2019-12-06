@@ -17,17 +17,17 @@ def make_var(name):
     return VAR, name
 
 
-def make_atom(name, *terms):
-    return ATOM, name, list(terms)
+def make_atom(name, terms):
+    return ATOM, name, terms
 
 
-def make_function(name, *terms):
-    return FUNCTION, name, list(terms)
+def make_function(name, terms):
+    return FUNCTION, name, terms
 
 
 def make_affirmation(atom, condition):
     return AFFIRMATION, atom, condition
 
 
-def make_interrogation(atom, condition):
-    return INTERROGATION, atom, condition
+def make_interrogation(atom, solutions):
+    return INTERROGATION, atom, solutions
