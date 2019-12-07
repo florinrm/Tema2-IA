@@ -1,4 +1,4 @@
-from elements import make_constant, make_atom, make_var, make_affirmation
+from elements import make_constant, make_atom, make_var, make_affirmation, make_interrogation
 
 lines = []
 
@@ -11,14 +11,41 @@ def parse(line):
     global lines
     # checking if it is interrogation
     if line[0] == '?':  # interrogation
-        print('interrogation')
+        token = line[1:].rstrip().lstrip()
+        tokens_atom = token.split('(')
+        name_atom = tokens_atom[0]
+        terms_atom = tokens_atom[1].strip(')').split(',')
+        terms = []
+        if not_empty(terms_atom):
+            for term in terms_atom:
+                tok = term.lstrip().rstrip()
+                if '?' not in tok:
+                    terms.append(make_constant(tok))
+                else:
+                    terms.append(make_var(tok))
+        atom = make_atom(name_atom, terms)
+        interrogation = make_interrogation(atom, [])
+        # print(interrogation)
+        lines.append(interrogation)
     elif line[0] == ':':  # interrogation answers
-        print('response to interrogation')
+        # print('response to interrogation')
+        response = line[1:].rstrip().lstrip()
+        if response == 'True' or response == 'False':
+            lines[-1][2].append(response)
+        else:
+            sol_tokens = list(map(lambda x: x.rstrip().lstrip(), response.split(';')))
+            solutions = []
+            for token in sol_tokens:
+                sol_token = list(map(lambda x: x.rstrip().lstrip(), token.split(':')))
+                sol_var = make_var(sol_token[0])
+                sol_constant = make_constant(sol_token[1])
+                solutions.append((sol_var, sol_constant))
+            lines[-1][2].append(solutions)
+        #print(lines[-1][2])
     else:  # affirmation
-        print('affirmation')
         tokens = line.split('(')
         name_token = tokens[0]
-        print(name_token)
+        #print(name_token)
         if ':' not in line:  # if we don't have any conditions
             terms_tokens = str(tokens[1]).rstrip().strip('\t\n\r').strip(')').split(',')
             atom_terms = []
@@ -31,7 +58,7 @@ def parse(line):
                         atom_terms.append(make_var(tok[1:]))  # variable
             atom = make_atom(name_token, atom_terms)
             affirmation = make_affirmation(atom, [])
-            print(affirmation)
+            #print(affirmation)
             lines.append(affirmation)
         else:  # else if we have any conditions
             rest = line[len(name_token):].rstrip().strip('\t\n\r')
@@ -68,7 +95,7 @@ def parse(line):
                 condition_atom = make_atom(name_condition, atoms_condition)
                 conditions.append(condition_atom)
             affirmation = make_affirmation(atom, conditions)
-            print(affirmation)
+            #print(affirmation)
             lines.append(affirmation)
 
 
@@ -77,6 +104,8 @@ def main():
         for line in fp:
             if line.strip():
                 parse(line)
+        for line in lines:
+            print(line)
 
 
 if __name__ == '__main__':
