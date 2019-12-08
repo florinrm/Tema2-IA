@@ -55,3 +55,7 @@ def is_atom(statement):
 
 def is_const(statement):
     return statement[0] == CONST
+
+
+def get_variables(statement):
+    variables = []
