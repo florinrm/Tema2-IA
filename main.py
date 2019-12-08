@@ -1,5 +1,5 @@
 from elements import make_constant, make_atom, make_var, make_affirmation, make_interrogation, is_simple_affirmation, \
-    is_complex_affirmation
+    is_complex_affirmation, is_interrogation
 
 lines = []
 
@@ -101,12 +101,27 @@ def parse(line):
             lines.append(affirmation)
 
 
-def find_solutions(name):
+def find_all_solutions(name):
     solutions = []
     for statement in lines:
         if is_simple_affirmation(statement) and name == statement[1][1]:
             solutions.append(list(map(lambda x: x[1][0], statement[1][2])))
-            print('ayy')
+    return solutions
+
+
+def find_solutions(statement):
+    solutions = []
+    if is_interrogation(statement):
+        all_solutions = find_all_solutions(statement[1][1])
+        # print(all_solutions)
+        variables = list(map(lambda x: x[1], statement[1][2]))
+        # print(variables)
+        fuck = []
+        for sol in all_solutions:
+            muie = [(variables[i], sol[i]) for i in range(len(variables))]
+            muie = list(filter(lambda x: '?' in x[0], muie))
+            solutions.append(muie)
+
     return solutions
 
 
@@ -125,7 +140,7 @@ def solve(statement, indent_level=0):
 
 
 def main():
-    with open('test1.txt') as fp:
+    with open('test.txt') as fp:
         for line in fp:
             if line.strip():
                 parse(line)
@@ -137,8 +152,18 @@ def main():
         solve(statement)
     print('Gata.')
 
-    print(find_solutions('P'))
+    print(lines[4])
+    print(find_solutions(lines[4]))
+    print(find_solutions(lines[5]))
 
 
 if __name__ == '__main__':
     main()
+
+'''
+idea: P(?X), Q(?Y), R(?Z)
+P(1), P(2), Q(3), Q(5)
+
+
+another idea, with variables: dict of var - values {X: [1, 2, 3], Y: [1, 5, 2]}, checking for validation
+'''
