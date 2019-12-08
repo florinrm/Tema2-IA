@@ -1,0 +1,48 @@
+Pentru P(1):
+Scopuri de demonstrat: P(1)
+  P(1) este un fapt dat
+Gata.
+
+Pentru pq(?x, 3)
+
+Scopuri de demonstrat: pq(?x, 3)
+  Încercăm pq(?x, 3) : P(?x), Q(3)
+  Scopuri de demonstrat: P(?x), Q(3)
+    P(1) este un fapt
+      Q(3) este un fapt
+      Soluție: ?x : 1
+    P(2) este un fapt
+      Q(3) este un fapt
+      Soluție: ?x : 2
+Gata.
+
+Pentru triangle(ABC)
+
+Scopuri de demonstrat: triangle(ABC)
+  Încercăm triangle(ABC) : size(get(ABC, 0), ?LA), size(get(ABC, 1), ?LB), size(get(ABC, 2), ?LC), checks_out(compute_triangle(?LA, ?LB, ?LC))
+  get(ABC, 0) => AB
+  Scopuri de demonstrat: size(AB, ?LA), size(get(ABC, 1), ?LB), size(get(ABC, 2), ?LC), checks_out(compute_triangle(?LA, ?LB, ?LC))
+    size(AB, 3) este un fapt
+    get(ABC, 1) => BC
+    Scopuri de demonstrat: size(BC, ?LB), size(get(ABC, 2), ?LC), checks_out(compute_triangle(3, ?LB, ?LC))
+      size(BC, 4) este un fapt
+      get(ABC, 2) => AC
+      Scopuri de demonstrat: size(AC, ?LC), checks_out(compute_triangle(3, 4, ?LC))
+        size(AC, 5) este un fapt
+        compute_triangle(3, 4, 5) => 2
+        Scopuri de demonstrat: checks_out(2)
+          checks_out(2) este un fapt
+Gata.
+
+Pentru diagnostic(viroza)
+
+Scopuri de demonstrat: diagnostic(viroza)
+  Încercăm diagnostic(viroza) : simptom(stareProasta)  % 0.5
+  Scopuri de demonstrat: simptom(stareProasta)
+    simptom(stareProasta) % 0.7 este un fapt
+    diagnostic(viroza) % 0.35
+  Încercăm diagnostic(viroza) : simptom(febra) % 0.7
+    simptom(febra) % 1 este un fapt
+    diagnostic(viroza) % 0.7
+  diagostic(viroza) % 0.805    // 0.35 + 0.7 - 0.35 * 0.7
+Gata.

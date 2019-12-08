@@ -1,4 +1,5 @@
-from elements import make_constant, make_atom, make_var, make_affirmation, make_interrogation
+from elements import make_constant, make_atom, make_var, make_affirmation, make_interrogation, is_simple_affirmation, \
+    is_complex_affirmation
 
 lines = []
 
@@ -41,11 +42,11 @@ def parse(line):
                 sol_constant = make_constant(sol_token[1])
                 solutions.append((sol_var, sol_constant))
             lines[-1][2].append(solutions)
-        #print(lines[-1][2])
+        # print(lines[-1][2])
     else:  # affirmation
         tokens = line.split('(')
         name_token = tokens[0]
-        #print(name_token)
+        # print(name_token)
         if ':' not in line:  # if we don't have any conditions
             terms_tokens = str(tokens[1]).rstrip().strip('\t\n\r').strip(')').split(',')
             atom_terms = []
@@ -57,8 +58,8 @@ def parse(line):
                     else:
                         atom_terms.append(make_var(tok[1:]))  # variable
             atom = make_atom(name_token, atom_terms)
-            affirmation = make_affirmation(atom, [])
-            #print(affirmation)
+            affirmation = make_affirmation(atom, [], line.rstrip().lstrip())
+            # print(affirmation)
             lines.append(affirmation)
         else:  # else if we have any conditions
             rest = line[len(name_token):].rstrip().strip('\t\n\r')
@@ -77,7 +78,8 @@ def parse(line):
             atom = make_atom(name_token, atom_terms)
 
             # conditions
-            conditions_tokens = list(map(lambda x: x.rstrip().lstrip(), condition_tokens[1].rstrip().split(',')))
+            conditions_tokens = list(map(lambda x: x.rstrip().lstrip() + ')',
+                                         condition_tokens[1].rstrip().split('),')))
             conditions = []
             for condition in conditions_tokens:
                 cond_tokens = condition.split('(')
@@ -94,18 +96,48 @@ def parse(line):
                             atoms_condition.append(make_var(tok[1:]))  # variable
                 condition_atom = make_atom(name_condition, atoms_condition)
                 conditions.append(condition_atom)
-            affirmation = make_affirmation(atom, conditions)
-            #print(affirmation)
+            affirmation = make_affirmation(atom, conditions, line.rstrip().lstrip())
+            # print(affirmation)
             lines.append(affirmation)
 
 
+def find_solutions(name):
+    solutions = []
+    for statement in lines:
+        if is_simple_affirmation(statement) and name == statement[1][1]:
+            solutions.append(list(map(lambda x: x[1][0], statement[1][2])))
+            print('ayy')
+    return solutions
+
+
+def solve(statement, indent_level=0):
+    if is_simple_affirmation(statement):
+        print(('\t' * indent_level) + 'Scopuri de demonstrat: ' + str(statement[3]))
+        indent_level += 1
+        print(('\t' * indent_level) + str(statement[3]) + ' e un fapt dat')
+        indent_level -= 1
+
+    elif is_complex_affirmation(statement):
+        print(('\t' * indent_level) + 'Scopuri de demonstrat: ' + str(statement[3]).split(':')[0])
+        indent_level += 1
+        print(('\t' * indent_level) + 'Încercăm: ' + str(statement[3]))
+        print(('\t' * indent_level) + 'Scopuri de demonstrat: ' + str(statement[3]).split(':')[1])
+
+
 def main():
-    with open('test.txt') as fp:
+    with open('test1.txt') as fp:
         for line in fp:
             if line.strip():
                 parse(line)
+
         for line in lines:
             print(line)
+
+    for statement in lines:
+        solve(statement)
+    print('Gata.')
+
+    print(find_solutions('P'))
 
 
 if __name__ == '__main__':
