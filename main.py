@@ -1,5 +1,5 @@
 from elements import make_constant, make_atom, make_var, make_affirmation, make_interrogation, is_simple_affirmation, \
-    is_complex_affirmation, is_interrogation
+    is_complex_affirmation, is_interrogation, are_all_variables_constant
 
 lines = []
 
@@ -117,6 +117,8 @@ def find_solutions(statement):
         # de verificat cand avem doar constante (true / false)
         variables = list(map(lambda x: x[1], statement[1][2]))
         print(variables)
+        if are_all_variables_constant(statement):
+            return len(list(filter(lambda x: x == variables, all_solutions))) != 0
         for i in range(len(variables)):
             if '?' not in variables[i]:
                 all_solutions = list(filter(lambda x: x[i] == variables[i], all_solutions))

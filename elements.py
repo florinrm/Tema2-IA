@@ -59,3 +59,10 @@ def is_const(statement):
 
 def get_variables(statement):
     variables = []
+
+
+def are_all_variables_constant(statement):
+    if is_affirmation(statement) or is_interrogation(statement):
+        variables = list(filter(lambda x: '?' in x[1], statement[1][2]))
+        return len(variables) == 0
+    return False
