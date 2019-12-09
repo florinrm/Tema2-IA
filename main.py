@@ -1,5 +1,5 @@
 from elements import make_constant, make_atom, make_var, make_affirmation, make_interrogation, is_simple_affirmation, \
-    is_complex_affirmation, is_interrogation, are_all_variables_constant
+    is_complex_affirmation, is_interrogation, are_all_variables_constant, is_affirmation, get_conditions
 
 lines = []
 
@@ -8,7 +8,7 @@ def not_empty(word):
     return len(list(filter(lambda x: x != '', word))) > 0
 
 
-def parse(line):
+def parse(line, add=True):
     global lines
     # checking if it is interrogation
     if line[0] == '?':  # interrogation
@@ -25,9 +25,11 @@ def parse(line):
                 else:
                     terms.append(make_var(tok))
         atom = make_atom(name_atom, terms)
-        interrogation = make_interrogation(atom, [])
+        interrogation = make_interrogation(atom, [], line.rstrip().lstrip())
         # print(interrogation)
-        lines.append(interrogation)
+        if add:
+            lines.append(interrogation)
+        return interrogation
     elif line[0] == ':':  # interrogation answers
         # print('response to interrogation')
         response = line[1:].rstrip().lstrip()
@@ -60,7 +62,9 @@ def parse(line):
             atom = make_atom(name_token, atom_terms)
             affirmation = make_affirmation(atom, [], line.rstrip().lstrip())
             # print(affirmation)
-            lines.append(affirmation)
+            if add:
+                lines.append(affirmation)
+            return affirmation
         else:  # else if we have any conditions
             rest = line[len(name_token):].rstrip().strip('\t\n\r')
             condition_tokens = rest.split(':')
@@ -98,7 +102,15 @@ def parse(line):
                 conditions.append(condition_atom)
             affirmation = make_affirmation(atom, conditions, line.rstrip().lstrip())
             # print(affirmation)
-            lines.append(affirmation)
+            if add:
+                lines.append(affirmation)
+            return affirmation
+
+
+def find_affirmations_by_interrogation(interrogation):
+    if is_interrogation(interrogation):
+        return list(filter(lambda x: x[1][1] == interrogation[1][1] and is_affirmation(x), lines))
+    return []
 
 
 def find_all_solutions(name):
@@ -116,7 +128,7 @@ def find_solutions(statement):
         # print(all_solutions)
         # de verificat cand avem doar constante (true / false)
         variables = list(map(lambda x: x[1], statement[1][2]))
-        print(variables)
+        # print(variables)
         if are_all_variables_constant(statement):
             return len(list(filter(lambda x: x == variables, all_solutions))) != 0
         for i in range(len(variables)):
@@ -127,8 +139,28 @@ def find_solutions(statement):
             muie = [(variables[i], sol[i]) for i in range(len(variables))]
             muie = list(filter(lambda x: '?' in x[0], muie))
             solutions.append(muie)
-
+        if len(solutions) == 0:
+            return False
+    elif is_complex_affirmation(statement):
+        # cauta solutiile de la fiecare statement
+        conditions = get_conditions(statement)
+        all_vars = []
+        solutions = []
+        for cond in conditions:
+            # take the variables
+            print(cond)
+            variables = list(map(lambda x: x[1], cond[2]))
+            all_vars += variables
+            all_vars = list(set(all_vars))
+            print(variables)
+        print(all_vars)
     return solutions
+
+
+'''
+idee: ia variabilele din conditii, baga intr-un set
+iei toate solutiile, faci insersectie pe variabile
+'''
 
 
 def solve(statement, indent_level=0):
@@ -144,6 +176,30 @@ def solve(statement, indent_level=0):
         print(('\t' * indent_level) + 'Încercăm: ' + str(statement[3]))
         print(('\t' * indent_level) + 'Scopuri de demonstrat: ' + str(statement[3]).split(':')[1])
 
+        solutions = []
+
+        conditions = get_conditions(statement)
+        if conditions is not None:
+            for condition in conditions:
+                print(condition)
+
+    elif is_interrogation(statement):
+        print(('\t' * indent_level) + 'Scopuri de demonstrat: ' + str(statement[3]).split(':')[0])
+        indent_level += 1
+        print(('\t' * indent_level) + 'Încercăm sa cautam solutii pentru interogatia: ' + str(statement[3]))
+        solutions = find_solutions(statement)
+        if not solutions:
+            indent_level += 1
+            print(('\t' * indent_level) + 'Nu s-au putut gasi solutii')
+            indent_level -= 2
+            return
+        indent_level += 1
+        print(('\t' * indent_level) + 'Solutiile sunt:')
+        indent_level += 1
+        for solution in solutions:
+            plm = str(list(map(lambda x: str(x[0][1:]) + ' : ' + str(x[1]), solution))).replace(',', ';') \
+                .strip('[').strip(']').replace('\'', '')
+            print(('\t' * indent_level) + str(plm))
 
 def main():
     with open('test.txt') as fp:
@@ -166,6 +222,8 @@ def main():
     print(find_solutions(lines[11]))
     print(find_solutions(lines[12]))
 
+    print(find_solutions(lines[-1]))
+
 
 if __name__ == '__main__':
     main()
@@ -176,4 +234,12 @@ P(1), P(2), Q(3), Q(5)
 
 
 another idea, with variables: dict of var - values {X: [1, 2, 3], Y: [1, 5, 2]}, checking for validation
+'''
+
+'''
+afirmatie complexa - mai multe conditii
+
+iau fiecare conditie si generez solutiile acesteia - caut in lista de definitii si vad daca e simpla sau nu
+- daca e simpla, o fac ca interogatie si generez solutiile
+- daca nu e simpla, caut definitia ei si apelezi iar cautare de solutii pe rahatul ala
 '''
