@@ -29,8 +29,8 @@ def make_affirmation(atom, condition, representation):
     return AFFIRMATION, atom, condition, representation
 
 
-def make_interrogation(atom, solutions):
-    return INTERROGATION, atom, solutions
+def make_interrogation(atom, solutions, representation):
+    return INTERROGATION, atom, solutions, representation
 
 
 def is_affirmation(statement):
@@ -57,6 +57,10 @@ def is_const(statement):
     return statement[0] == CONST
 
 
+def is_variable(statement):
+    return statement[0] == VAR
+
+
 def get_variables(statement):
     variables = []
 
@@ -66,3 +70,9 @@ def are_all_variables_constant(statement):
         variables = list(filter(lambda x: '?' in x[1], statement[1][2]))
         return len(variables) == 0
     return False
+
+
+def get_conditions(statement):
+    if is_complex_affirmation(statement):
+        return statement[2]
+    return None
