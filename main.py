@@ -158,8 +158,8 @@ def find_solutions(statement):
     elif is_complex_affirmation(statement):
         # cauta solutiile de la fiecare statement
         conditions = get_conditions(statement)
-        all_vars = []
-        solutions = []
+        all_vars = []  # variables from conditions
+        solutions = []  # problem solutions
         for cond in conditions:
             # take the variables
             variables = list(map(lambda x: x[1], cond[2]))
@@ -205,10 +205,31 @@ def find_solutions(statement):
                 # print(interogate)
         print(all_vars)
         for var in all_vars:
+            var_solutions = []
             for sol_cond in solutions:
                 # print(sol_cond)
+                # print(var)
+                # print(list(filter(lambda x: x, sol_cond)))
+                var_solution = []
                 for sol in sol_cond:
-                    print(sol)
+                    # for sol in list(filter(lambda x: x[0][1:] == var, sol_cond)):
+                    # pass
+                    # print(sol)
+                    single_sol = list(filter(lambda x: x[0][1:] == var, sol))
+                    # print(str(var) + ': ' + str(single_sol))
+                    if len(single_sol) > 0:
+                        var_solution.append(single_sol[0][1])
+                if len(var_solution) > 0:
+                    var_solutions.append(var_solution)
+                # print(var + ': ' + str(var_solutions))
+
+            # possible values for variables
+            var_final_solutions = set(var_solutions[0])
+            for s in var_solutions[1:]:
+                var_final_solutions.intersection_update(s)
+            var_final_solutions = list(var_final_solutions)
+            print(var + ': ' + str(var_final_solutions))
+
     if len(list(filter(lambda x: x is True, solutions))) == len(solutions):
         return True
     return solutions
