@@ -123,9 +123,12 @@ def check_if_simple_affirmation(name):
 
 
 def check_if_complex_affirmation(name):
+    sols = []
     for statement in lines:
         if name == statement[1][1] and is_complex_affirmation(statement):
-            return True, statement
+            sols.append(statement)
+    if len(sols) > 0:
+        return True, sols
     return False, None
 
 
@@ -209,7 +212,21 @@ def find_solutions(statement):
             elif check2[0]:
                 # print('sex anal')
                 interogate = check2[1]
-                # print(interogate)
+                interogate_sols = []
+                for query in interogate:
+                    cond_variables = list(map(lambda x: (x[0], '?' + x[1]) if x[0] == 'VAR' else (x[0], x[1]), cond[2]))
+                    copy_cond = list(cond)
+                    copy_cond[2] = cond_variables
+                    cond = tuple(copy_cond)
+                    aux[1] = cond
+                    query = tuple(aux)
+                    q = make_interrogation(aux[1], [], aux[-1])
+                    partial_sols = find_solutions(query)
+                    print(partial_sols)
+                    if not partial_sols:
+                        return False
+                    interogate_sols.append(partial_sols)
+
         print(all_vars)
         var_viable_solutions = dict()
         for var in all_vars:
@@ -292,10 +309,10 @@ def find_solutions(statement):
         print("filtered compressed: " + str(aux_temp))
 
         for pos_sol in cartesian:
-            print('sex anal cu dobre')
+            print('mue sclipirea')
             print(pos_sol)
             print(aux_temp)
-            print('sex anal cu chilipirea')
+            print('MUIE chilipirea')
             if set(pos_sol) in list(map(lambda x: set(x), aux_temp)):
                 print('MUIE CHILIPIREA')
                 final_solutions.append(pos_sol)
