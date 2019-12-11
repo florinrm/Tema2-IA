@@ -1,3 +1,5 @@
+import itertools
+
 from elements import make_constant, make_atom, make_var, make_affirmation, make_interrogation, is_simple_affirmation, \
     is_complex_affirmation, is_interrogation, are_all_variables_constant, is_affirmation, get_conditions
 
@@ -135,8 +137,13 @@ def find_all_solutions(name):
     return solutions
 
 
+def sublist(lst1, lst2):
+    return set(lst1) <= set(lst2)
+
+
 def find_solutions(statement):
     solutions = []
+    final_solutions = []
     if is_interrogation(statement):
         all_solutions = find_all_solutions(statement[1][1])
         # print(all_solutions)
@@ -204,6 +211,7 @@ def find_solutions(statement):
                 interogate = check2[1]
                 # print(interogate)
         print(all_vars)
+        var_viable_solutions = dict()
         for var in all_vars:
             var_solutions = []
             for sol_cond in solutions:
@@ -223,15 +231,81 @@ def find_solutions(statement):
                     var_solutions.append(var_solution)
                 # print(var + ': ' + str(var_solutions))
 
+
             # possible values for variables
+            # print("variable soluttions " + var + " " + str(var_solutions))
             var_final_solutions = set(var_solutions[0])
             for s in var_solutions[1:]:
                 var_final_solutions.intersection_update(s)
             var_final_solutions = list(var_final_solutions)
-            print(var + ': ' + str(var_final_solutions))
+            # print(var + " " + str(var_final_solutions))
+            if len(var_final_solutions) == 0:
+                return False
+            var_viable_solutions[var] = var_final_solutions
+
+        list_of_lists = []
+        for elem in var_viable_solutions.keys():
+            lst = var_viable_solutions[elem]
+            temp = []
+            for val in lst:
+                temp.append(('?' + elem, val))
+            list_of_lists.append(temp)
+
+        # print(var_viable_solutions)
+        # print(list_of_lists)
+
+        cartesian = []  # list of possible solutions
+        for element in itertools.product(*list_of_lists):
+            # print(element)
+            cartesian.append(list(element))
+
+        print("Possible solutions: " + str(cartesian))
+
+        print(var_viable_solutions)
+
+        aux = []
+        for s in solutions:
+            aux += s
+        print('compressed: ' + str(aux))
+
+        aux_temp = []
+        reject = []
+        for var in all_vars:
+            for s in aux:
+                # print(s, var)
+                sug_pula = list(filter(lambda x: x[0].strip('?') == var, s))
+                if len(sug_pula) > 0:
+                    pula_in_cur = list(map(lambda x: x[1], sug_pula))
+                    # print(pula_in_cur)
+                    # print(var_viable_solutions[var])
+                    if sublist(pula_in_cur, var_viable_solutions[var]):
+                        if s not in aux_temp and s not in reject:
+                            aux_temp.append(s)
+                    else:
+                        reject.append(s)
+                # print(sug_pula)
+
+        for r in reject:
+            while r in aux_temp:
+                aux_temp.remove(r)
+
+        print("filtered compressed: " + str(aux_temp))
+
+        for pos_sol in cartesian:
+            print('sex anal cu dobre')
+            print(pos_sol)
+            print(aux_temp)
+            print('sex anal cu chilipirea')
+            if set(pos_sol) in list(map(lambda x: set(x), aux_temp)):
+                print('MUIE CHILIPIREA')
+                final_solutions.append(pos_sol)
+
+        print('MUIE DECANA ' + str(final_solutions))
 
     if len(list(filter(lambda x: x is True, solutions))) == len(solutions):
         return True
+    if is_complex_affirmation(statement):
+        return final_solutions
     return solutions
 
 
@@ -302,7 +376,7 @@ def main():
     print(find_solutions(lines[11]))
     print(find_solutions(lines[12]))
     '''
-    print(find_solutions(lines[-1]))
+    print('Final solution ' + str(find_solutions(lines[-1])))
 
 
 if __name__ == '__main__':
