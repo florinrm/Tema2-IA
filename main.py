@@ -183,12 +183,27 @@ def find_solutions(statement):
             affirmations = check_if_complex_affirmation(statement[1][1])[1]
             variables = statement[1][2]
             for aff in affirmations:
-                print(aff)
-            print('vars ' + str(variables))
+                print('affrimation' + str(aff))
+            # print('vars ' + str(variables))
+            sols = []
             if len(variables) == 0:  # just transform in interrogations
                 pass
             else:  # replace the variables
-                pass
+                for x in range(len(affirmations)):
+                    conditions = get_conditions(affirmations[x])
+                    atom_vars = deepcopy(affirmations[x][1][2])
+                    for i in range(len(variables)):
+                        for j in range(len(conditions)):
+                            copy_cond = list(conditions[j])
+                            for k in range(len(conditions[j][2])):
+                                if conditions[j][2][k][1] == atom_vars[i][1]:
+                                    copy_cond[2][k] = (copy_cond[2][k][0], variables[i][1])
+                            conditions[j] = copy_cond
+                    print('initial ' + str(affirmations[x]))
+                    temp = list(affirmations[x])
+                    temp[2] = conditions
+                    affirmations[x] = tuple(temp)
+                    print('final ' + str(affirmations[x]))
     elif is_complex_affirmation(statement):
         # cauta solutiile de la fiecare statement
         conditions = get_conditions(statement)
