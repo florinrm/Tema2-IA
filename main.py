@@ -109,6 +109,12 @@ def parse(line, add=True):
             return affirmation
 
 
+def are_all_variables_simple(statement):
+    variables = statement[1][2]
+    res = list(filter(lambda x: x[0] == 'VAR', variables))
+    return len(variables) == len(res)
+
+
 def find_affirmations_by_interrogation(interrogation):
     if is_interrogation(interrogation):
         return list(filter(lambda x: x[1][1] == interrogation[1][1] and is_affirmation(x), lines))
@@ -136,6 +142,8 @@ def find_all_solutions(name):
     solutions = []
     for statement in lines:
         if is_simple_affirmation(statement) and name == statement[1][1]:
+            if are_all_variables_simple(statement):
+                return True
             solutions.append(list(map(lambda x: x[1][0], statement[1][2])))
     return solutions
 
@@ -149,20 +157,24 @@ def find_solutions(statement):
     final_solutions = []
     if is_interrogation(statement):
         all_solutions = find_all_solutions(statement[1][1])
+        if all_solutions == True:
+            return True
         # print(all_solutions)
         # de verificat cand avem doar constante (true / false)
         variables = list(map(lambda x: x[1], statement[1][2]))
         # print(variables)
         if are_all_variables_constant(statement):
             return len(list(filter(lambda x: x == variables, all_solutions))) != 0
+
         for i in range(len(variables)):
             if '?' not in variables[i]:
                 all_solutions = list(filter(lambda x: x[i] == variables[i], all_solutions))
-        fuck = []
+
         for sol in all_solutions:
             muie = [(variables[i], sol[i]) for i in range(len(variables))]
             muie = list(filter(lambda x: '?' in x[0], muie))
             solutions.append(muie)
+
         if len(solutions) == 0:
             return False
     elif is_complex_affirmation(statement):
@@ -170,6 +182,7 @@ def find_solutions(statement):
         conditions = get_conditions(statement)
         all_vars = []  # variables from conditions
         solutions = []  # problem solutions
+
         for cond in conditions:
             # take the variables
             variables = list(map(lambda x: x[1], cond[2]))
@@ -177,14 +190,22 @@ def find_solutions(statement):
             all_vars = list(set(all_vars))
 
             # print(variables)
-            # print(cond)
+            # print("CONDITIE COAIE: " + str(cond))
 
             # name of cond - gotta find the statement
             # print(cond[1])
 
             check1 = check_if_simple_affirmation(cond[1])
             check2 = check_if_complex_affirmation(cond[1])
+            '''
+            if check1[0] == True:
+                print('SUG PULA PE 30 DE EURO ' + str(check1[1][1]))
+            '''
 
+            if check1[0] == True:
+                if len(cond[2]) != len(check1[1][1][2]):
+                    return False
+            # print("IMI PLACE SEXUL ANA")
             if check1[0]:
                 # print("yiss")
 
@@ -214,6 +235,8 @@ def find_solutions(statement):
                 interogate = check2[1]
                 interogate_sols = []
                 for query in interogate:
+                    print(query)
+                    '''
                     cond_variables = list(map(lambda x: (x[0], '?' + x[1]) if x[0] == 'VAR' else (x[0], x[1]), cond[2]))
                     copy_cond = list(cond)
                     copy_cond[2] = cond_variables
@@ -226,16 +249,25 @@ def find_solutions(statement):
                     if not partial_sols:
                         return False
                     interogate_sols.append(partial_sols)
-
+                    '''
         print(all_vars)
         var_viable_solutions = dict()
         for var in all_vars:
             var_solutions = []
+            # print('DEEA E VIATA MEA: ' + str(solutions))
+            if len(solutions) == len(list(filter(lambda x: x == True, solutions))):
+                return True
             for sol_cond in solutions:
                 # print(sol_cond)
                 # print(var)
                 # print(list(filter(lambda x: x, sol_cond)))
                 var_solution = []
+                # print('ANDREEA E VIATA MEA: ' + str(sol_cond))
+                if sol_cond == False:
+                    return False
+                if sol_cond == True:
+                    continue
+
                 for sol in sol_cond:
                     # for sol in list(filter(lambda x: x[0][1:] == var, sol_cond)):
                     # pass
@@ -268,68 +300,49 @@ def find_solutions(statement):
                 temp.append(('?' + elem, val))
             list_of_lists.append(temp)
 
-        # print(var_viable_solutions)
-        # print(list_of_lists)
-
         cartesian = []  # list of possible solutions
         for element in itertools.product(*list_of_lists):
             # print(element)
             cartesian.append(list(element))
 
-        print("Possible solutions: " + str(cartesian))
-
-        print(var_viable_solutions)
+        # print("Possible solutions: " + str(cartesian))
+        # print(var_viable_solutions)
 
         aux = []
         for s in solutions:
             aux += s
-        print('compressed: ' + str(aux))
+        # print('compressed: ' + str(aux))
 
         aux_temp = []
         reject = []
         for var in all_vars:
             for s in aux:
-                # print(s, var)
                 sug_pula = list(filter(lambda x: x[0].strip('?') == var, s))
                 if len(sug_pula) > 0:
                     pula_in_cur = list(map(lambda x: x[1], sug_pula))
-                    # print(pula_in_cur)
-                    # print(var_viable_solutions[var])
                     if sublist(pula_in_cur, var_viable_solutions[var]):
                         if s not in aux_temp and s not in reject:
                             aux_temp.append(s)
                     else:
                         reject.append(s)
-                # print(sug_pula)
 
         for r in reject:
             while r in aux_temp:
                 aux_temp.remove(r)
 
-        print("filtered compressed: " + str(aux_temp))
+        # print("filtered compressed: " + str(aux_temp))
 
         for pos_sol in cartesian:
-            print('mue sclipirea')
-            print(pos_sol)
-            print(aux_temp)
-            print('MUIE chilipirea')
             if set(pos_sol) in list(map(lambda x: set(x), aux_temp)):
-                print('MUIE CHILIPIREA')
                 final_solutions.append(pos_sol)
 
-        print('MUIE DECANA ' + str(final_solutions))
+        # print('MUIE DECANA ' + str(final_solutions))
 
     if len(list(filter(lambda x: x is True, solutions))) == len(solutions):
         return True
     if is_complex_affirmation(statement):
         return final_solutions
     return solutions
-
-
-'''
-idee: ia variabilele din conditii, baga intr-un set
-iei toate solutiile, faci insersectie pe variabile
-'''
 
 
 def solve(statement, indent_level=0):
@@ -345,12 +358,19 @@ def solve(statement, indent_level=0):
         print(('\t' * indent_level) + 'Încercăm: ' + str(statement[3]))
         print(('\t' * indent_level) + 'Scopuri de demonstrat: ' + str(statement[3]).split(':')[1])
 
-        solutions = []
-
+        '''
         conditions = get_conditions(statement)
         if conditions is not None:
             for condition in conditions:
                 print(condition)
+        '''
+
+        solutions = find_solutions(statement)
+        if solutions == False:
+            indent_level += 1
+            print(('\t' * indent_level) + 'Nu se pot gasi solutii')
+            indent_level -= 1
+        print(solutions)
 
     elif is_interrogation(statement):
         print(('\t' * indent_level) + 'Scopuri de demonstrat: ' + str(statement[3]).split(':')[0])
@@ -362,6 +382,13 @@ def solve(statement, indent_level=0):
             print(('\t' * indent_level) + 'Nu s-au putut gasi solutii')
             indent_level -= 2
             return
+
+        if solutions == True:
+            indent_level += 1
+            print(('\t' * indent_level) + str(statement[3][2:]) + ' este un fapt adevarat')
+            indent_level += 1
+            return
+
         indent_level += 1
         print(('\t' * indent_level) + 'Solutiile sunt:')
         indent_level += 1
@@ -372,7 +399,7 @@ def solve(statement, indent_level=0):
 
 
 def main():
-    with open('test.txt') as fp:
+    with open('test1.txt') as fp:
         for line in fp:
             if line.strip():
                 parse(line)
@@ -393,7 +420,7 @@ def main():
     print(find_solutions(lines[11]))
     print(find_solutions(lines[12]))
     '''
-    print('Final solution ' + str(find_solutions(lines[-1])))
+    print('Final solution ' + str(find_solutions(lines[3])))
 
 
 if __name__ == '__main__':
