@@ -184,7 +184,7 @@ def find_solutions(statement):
             variables = statement[1][2]
             for aff in affirmations:
                 print('affrimation' + str(aff))
-            # print('vars ' + str(variables))
+            print('vars ' + str(variables))
             sols = []
             if len(variables) == 0:  # just transform in interrogations
                 pass
@@ -197,11 +197,14 @@ def find_solutions(statement):
                             copy_cond = list(conditions[j])
                             for k in range(len(conditions[j][2])):
                                 if conditions[j][2][k][1] == atom_vars[i][1]:
-                                    copy_cond[2][k] = (copy_cond[2][k][0], variables[i][1])
-                            conditions[j] = copy_cond
+                                    copy_cond[2][k] = (variables[i][0], variables[i][1])
+                            conditions[j] = deepcopy(copy_cond)
                     print('initial ' + str(affirmations[x]))
                     temp = list(affirmations[x])
                     temp[2] = conditions
+                    atom_temp = list(temp[1])
+                    atom_temp[2] = variables
+                    temp[1] = tuple(atom_temp)
                     affirmations[x] = tuple(temp)
                     print('final ' + str(affirmations[x]))
     elif is_complex_affirmation(statement):
