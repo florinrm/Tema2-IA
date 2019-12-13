@@ -413,8 +413,11 @@ def solve(statement, indent_level=0):
 def main():
     with open(sys.argv[1]) as fp:
         for line in fp:
+            if line[0] == '#':
+                continue
             if line.strip():
-                parse(line)
+                print(line)
+                parse(line.split('%')[0].rstrip())
 
         for line in lines:
             print(line)
