@@ -1,4 +1,5 @@
 import itertools
+import sys
 from copy import deepcopy
 
 from elements import make_constant, make_atom, make_var, make_affirmation, make_interrogation, is_simple_affirmation, \
@@ -145,12 +146,20 @@ def find_all_solutions(name):
         if is_simple_affirmation(statement) and name == statement[1][1]:
             if are_all_variables_simple(statement):
                 return True
-            solutions.append(list(map(lambda x: x[1][0], statement[1][2])))
+            solutions.append(list(map(lambda x: x[1], statement[1][2])))
     return solutions
 
 
 def sublist(lst1, lst2):
     return set(lst1) <= set(lst2)
+
+
+def remove_ask_symbol(string):
+    if string[0] == '?':
+        string = string[1:]
+    if string[0] == '?':
+        string = string[1:]
+    return string
 
 
 def find_solutions(statement):
@@ -161,10 +170,8 @@ def find_solutions(statement):
             all_solutions = find_all_solutions(statement[1][1])
             if all_solutions == True:
                 return True
-            # print(all_solutions)
             # de verificat cand avem doar constante (true / false)
             variables = list(map(lambda x: x[1], statement[1][2]))
-            # print(variables)
             if are_all_variables_constant(statement):
                 return len(list(filter(lambda x: x == variables, all_solutions))) != 0
 
@@ -173,21 +180,25 @@ def find_solutions(statement):
                     all_solutions = list(filter(lambda x: x[i] == variables[i], all_solutions))
 
             for sol in all_solutions:
-                muie = [(variables[i], sol[i]) for i in range(len(variables))]
-                muie = list(filter(lambda x: '?' in x[0], muie))
-                solutions.append(muie)
+                sol_temp = [(variables[i], sol[i]) for i in range(len(variables))]
+                sol_temp = list(filter(lambda x: '?' in x[0], sol_temp))
+                solutions.append(sol_temp)
 
             if len(solutions) == 0:
                 return False
         elif check_if_complex_affirmation(statement[1][1])[0]:
-            affirmations = check_if_complex_affirmation(statement[1][1])[1]
+            affirmations = deepcopy(check_if_complex_affirmation(statement[1][1])[1])
             variables = statement[1][2]
-            for aff in affirmations:
-                print('affrimation' + str(aff))
-            print('vars ' + str(variables))
             sols = []
             if len(variables) == 0:  # just transform in interrogations
-                pass
+                for aff in affirmations:
+                    partial_sol = find_solutions(aff)
+                    if partial_sol == False:
+                        continue
+                    if partial_sol == True:
+                        sols.append(True)
+                        continue
+                    sols += partial_sol
             else:  # replace the variables
                 for x in range(len(affirmations)):
                     conditions = get_conditions(affirmations[x])
@@ -199,14 +210,20 @@ def find_solutions(statement):
                                 if conditions[j][2][k][1] == atom_vars[i][1]:
                                     copy_cond[2][k] = (variables[i][0], variables[i][1])
                             conditions[j] = deepcopy(copy_cond)
-                    print('initial ' + str(affirmations[x]))
                     temp = list(affirmations[x])
                     temp[2] = conditions
                     atom_temp = list(temp[1])
                     atom_temp[2] = variables
                     temp[1] = tuple(atom_temp)
                     affirmations[x] = tuple(temp)
-                    print('final ' + str(affirmations[x]))
+                    partial_sol = find_solutions(affirmations[x])
+                    if partial_sol == False:
+                        continue
+                    if partial_sol == True:
+                        sols.append(True)
+                        continue
+                    sols += partial_sol
+                return sols
     elif is_complex_affirmation(statement):
         # cauta solutiile de la fiecare statement
         conditions = get_conditions(statement)
@@ -225,48 +242,45 @@ def find_solutions(statement):
             if check1[0] == True:
                 if len(cond[2]) != len(check1[1][1][2]):
                     return False
-            # print("IMI PLACE SEXUL ANA")
             if check1[0]:
-                # print("yiss")
-
                 interogate = check1[1]
-                # print(interogate)
                 aux = list(interogate)
-                # print(list(map(lambda x: (x[0], '?' + x[1]) if x[0] == 'VAR' else (x[0], x[1]), cond[2])))
-                cond_variables = list(map(lambda x: (x[0], '?' + x[1]) if x[0] == 'VAR' else (x[0], x[1]), cond[2]))
-                # print(cond_variables)
+                cond_variables = list(
+                    map(lambda e: (e[0], '?' + remove_ask_symbol(e[1])) if e[0] == 'VAR' else (e[0], e[1]), cond[2]))
                 copy_cond = list(cond)
                 copy_cond[2] = cond_variables
                 cond = tuple(copy_cond)
-                # print(cond)
-
                 aux[1] = cond
-                interogate = tuple(aux)
-                # print(interogate)
                 query = make_interrogation(aux[1], [], aux[-1])
-                # print(query)
                 partial_sols = find_solutions(query)
-                # print(partial_sols)
                 if not partial_sols:
                     return False
                 solutions.append(partial_sols)
             elif check2[0]:
-                # print('sex anal')
-                interogate = check2[1]
+                interogations = check2[1]
                 interogate_sols = []
-                for query in interogate:
-                    # transform the condition in query
-                    pass
-        # print(all_vars)
+                for interogate in interogations:
+                    aux = list(interogate)
+                    cond_variables = list(
+                        map(lambda e: (e[0], '?' + e[1].lstrip('?')) if e[0] == 'VAR' else (e[0], e[1]), cond[2]))
+                    copy_cond = list(cond)
+                    copy_cond[2] = cond_variables
+                    cond = tuple(copy_cond)
+                    aux[1] = cond
+                    query = make_interrogation(aux[1], [], aux[-1])
+                    partial_sols = find_solutions(interogate)
+                    if not partial_sols:
+                        return False
+                    if partial_sols == True:
+                        continue
+                    interogate_sols += partial_sols
+                solutions.append(interogate_sols)
         var_viable_solutions = dict()
         for var in all_vars:
             var_solutions = []
             if len(solutions) == len(list(filter(lambda x: x == True, solutions))):
                 return True
             for sol_cond in solutions:
-                # print(sol_cond)
-                # print(var)
-                # print(list(filter(lambda x: x, sol_cond)))
                 var_solution = []
                 if sol_cond == False:
                     return False
@@ -274,25 +288,18 @@ def find_solutions(statement):
                     continue
 
                 for sol in sol_cond:
-                    # for sol in list(filter(lambda x: x[0][1:] == var, sol_cond)):
-                    # pass
-                    # print(sol)
                     single_sol = list(filter(lambda x: x[0][1:] == var, sol))
-                    # print(str(var) + ': ' + str(single_sol))
                     if len(single_sol) > 0:
                         var_solution.append(single_sol[0][1])
                 if len(var_solution) > 0:
                     var_solutions.append(var_solution)
-                # print(var + ': ' + str(var_solutions))
-
-
-            # possible values for variables
-            # print("variable soluttions " + var + " " + str(var_solutions))
+            if len(var_solutions) == 0:
+                continue
             var_final_solutions = set(var_solutions[0])
             for s in var_solutions[1:]:
                 var_final_solutions.intersection_update(s)
+
             var_final_solutions = list(var_final_solutions)
-            # print(var + " " + str(var_final_solutions))
             if len(var_final_solutions) == 0:
                 return False
             var_viable_solutions[var] = var_final_solutions
@@ -302,41 +309,33 @@ def find_solutions(statement):
             lst = var_viable_solutions[elem]
             temp = []
             for val in lst:
-                temp.append(('?' + elem, val))
+                temp.append(('?' + elem.lstrip('?'), val))
             list_of_lists.append(temp)
 
         cartesian = []  # list of possible solutions
         for element in itertools.product(*list_of_lists):
             # print(element)
             cartesian.append(list(element))
-        # print("Possible solutions: " + str(cartesian))
+
+        if cartesian == [[]]:
+            return final_solutions
 
         for sol_cartesian in cartesian:
-            # print(sol_cartesian)
             ok = True
             for cond in conditions:
-                # print('conditie de testat: ' + str(cond))
                 cond_vars = deepcopy(cond[2])
-                # print(cond_vars)
-
                 for s in sol_cartesian:
                     for i in range(len(cond_vars)):
                         if cond_vars[i][0] == 'VAR' and cond_vars[i][1] == s[0][1:]:
                             cond_vars[i] = ('CONST', s[1])
-                # print('final cond vars ' + str(cond_vars))
-
                 cond_atom = make_atom(cond[1], cond_vars)
-                # print('cond atom ' + str(cond_atom))
                 cond_interrogation = make_interrogation(cond_atom, [], "")
                 cond_solution = find_solutions(cond_interrogation)
-                # print("Condition solution: " + str(cond_solution))
                 if type(cond_solution) == bool:
                     ok = ok & cond_solution
-
             if ok:
                 final_solutions.append(sol_cartesian)
-
-    if len(list(filter(lambda x: x is True, solutions))) == len(solutions):
+    if len(list(filter(lambda p: p is True, solutions))) == len(solutions):
         return True
     if is_complex_affirmation(statement):
         return final_solutions
@@ -392,17 +391,27 @@ def solve(statement, indent_level=0):
             indent_level += 1
             return
 
+        if len(list(filter(lambda x: x == True, solutions))) == len(solutions):
+            indent_level += 1
+            print(('\t' * indent_level) + 'Interogatia este un fapt adevarat')
+            indent_level -= 1
+            return
+
         indent_level += 1
         print(('\t' * indent_level) + 'Solutiile sunt:')
         indent_level += 1
-        for solution in solutions:
-            plm = str(list(map(lambda x: str(x[0][1:]) + ' : ' + str(x[1]), solution))).replace(',', ';') \
+        copy_solutions = []
+        for sol in solutions:
+            if sol not in copy_solutions:
+                copy_solutions.append(sol)
+        for solution in copy_solutions:
+            sol_print = str(list(map(lambda x: str(x[0][1:]) + ' : ' + str(x[1]), solution))).replace(',', ';') \
                 .strip('[').strip(']').replace('\'', '')
-            print(('\t' * indent_level) + str(plm))
+            print(('\t' * indent_level) + str(sol_print))
 
 
 def main():
-    with open('test1.txt') as fp:
+    with open(sys.argv[1]) as fp:
         for line in fp:
             if line.strip():
                 parse(line)

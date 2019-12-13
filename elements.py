@@ -17,6 +17,10 @@ def make_var(name):
     return VAR, name
 
 
+def make_function(name, terms):
+    return FUNCTION, name, terms
+
+
 def make_atom(name, terms):
     return ATOM, name, terms
 
