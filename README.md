@@ -2,6 +2,11 @@
 
 A mini interpreter for Prolog-like logical statements (affirmations, functions, interrogations)
 
+How to run:
+`python3 main.py file_input`
+or
+`py main.py file_input`
+
 Example - input:
 ```prolog
 P(1)  
