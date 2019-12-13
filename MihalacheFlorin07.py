@@ -2,7 +2,8 @@ import itertools
 import sys
 from copy import deepcopy
 
-from elements import make_constant, make_atom, make_var, make_affirmation, make_interrogation, is_simple_affirmation, \
+from MihalacheFlorin07elements import make_constant, make_atom, make_var, make_affirmation, make_interrogation, \
+    is_simple_affirmation, \
     is_complex_affirmation, is_interrogation, are_all_variables_constant, is_affirmation, get_conditions
 
 lines = []
